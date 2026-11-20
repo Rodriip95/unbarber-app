@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix functions
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run functions:build
+      - run: npm run build
+
+# El deploy se suma cuando exista el proyecto de Firebase (T-014):
+# secreto FIREBASE_SERVICE_ACCOUNT y `firebase deploy` desde main con aprobación manual.

@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "lina-back"
+  },
+  "targets": {
+    "lina-back": {
+      "hosting": {
+        "app": ["unbarber-app"],
+        "landing": ["unbarber-landing"]
+      }
+    }
+  }
+}

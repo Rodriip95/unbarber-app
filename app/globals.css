@@ -1,26 +1,60 @@
 @import "tailwindcss";
 
+/* Sistema de diseño V2 "Poste". Ver docs/specs/01-diseno-ui.md
+   Regla madre: rojo = barbero y urgencia, azul = cliente y turnos, el resto blanco y negro. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #111111;
+  --red: #e0262b;
+  --red-soft: #fde7e7;
+  --blue: #1f49c7;
+  --blue-soft: #e6ecfb;
+  --gray: #f2f2f2;
+  --gray-text: #555555;
+  --mode: var(--blue);
+  --mode-soft: var(--blue-soft);
+}
+
+body[data-mode="barber"] {
+  --mode: var(--red);
+  --mode-soft: var(--red-soft);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-white: #ffffff;
+  --color-ink: var(--ink);
+  --color-red: var(--red);
+  --color-red-soft: var(--red-soft);
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-gray: var(--gray);
+  --color-gray-text: var(--gray-text);
+  --color-mode: var(--mode);
+  --color-mode-soft: var(--mode-soft);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-archivo-black);
+  --font-sans: var(--font-space-grotesk);
+
+  /* Sin radio en ningún elemento */
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+
+  --shadow-hard: 4px 4px 0 0 var(--ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--ink);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--mode);
+  outline-offset: 2px;
 }

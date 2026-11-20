@@ -1,0 +1,159 @@
+rules_version = '2';
+
+// Reglas de Firestore del proyecto lina-back (app y landing comparten base de datos).
+// El repo de la app es dueño de este archivo. Ver docs/specs/00-arquitectura.md.
+// Todo cambio de estado sensible (turnos, alertas, cortes, calificaciones, membresía)
+// lo escriben Cloud Functions con el Admin SDK, que no pasa por estas reglas.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // Configuración pública (versión de Términos, zona piloto, radio por defecto).
+    match /config/public {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Usuario: privado. Roles, Términos y teléfono los escribe completeOnboarding.
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow update: if isOwner(uid)
+        && onlyChanges(['displayName', 'notifPrefs', 'activeMode', 'clientArea']);
+      allow create, delete: if false;
+
+      match /devices/{deviceId} {
+        allow read, write: if isOwner(uid);
+      }
+      match /myBarbers/{barberId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && request.resource.data.source == 'manual';
+        allow delete: if isOwner(uid);
+        allow update: if false;
+      }
+    }
+
+    // Lo que un barbero puede ver del cliente. Sin teléfono.
+    match /clientPublic/{uid} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Perfil de barbero: público para usuarios logueados cuando es visible.
+    match /barbers/{uid} {
+      allow read: if signedIn() && (resource.data.visible == true || isOwner(uid) || isAdmin());
+      allow create: if false; // lo crea completeOnboarding en estado draft
+      allow update: if isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+             .hasAny(['verification', 'membership', 'visible', 'rating', 'base', 'availableNow', 'createdAt']);
+      allow delete: if false;
+
+      match /private/{doc} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+      match /myClients/{clientKey} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // Turnos, alertas, cortes, calificaciones y links cortos: solo lectura para las partes.
+    match /appointments/{id} {
+      allow read: if signedIn()
+        && (resource.data.barberId == request.auth.uid || resource.data.clientId == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+    match /zoneAlerts/{id} {
+      allow read: if signedIn() && (resource.data.clientId == request.auth.uid || isAdmin());
+      allow write: if false;
+      match /recipients/{barberId} {
+        allow read: if isOwner(barberId) || isAdmin();
+        allow write: if false;
+      }
+      match /responses/{barberId} {
+        allow read: if isOwner(barberId)
+          || get(/databases/$(database)/documents/zoneAlerts/$(id)).data.clientId == request.auth.uid;
+        allow write: if false;
+      }
+    }
+    match /cuts/{id} {
+      allow read: if signedIn()
+        && (resource.data.barberId == request.auth.uid || resource.data.clientId == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+    match /ratings/{id} {
+      allow read: if signedIn()
+        && (resource.data.fromUid == request.auth.uid || resource.data.revealed == true || isAdmin());
+      allow write: if false;
+    }
+    match /shortLinks/{code} {
+      allow read: if signedIn() && resource.data.recipientUid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Solo admin.
+    match /adminLog/{id} { allow read: if isAdmin(); allow write: if false; }
+    match /metrics/{doc=**} { allow read: if isAdmin(); allow write: if false; }
+    match /reports/{id} { allow read, write: if isAdmin(); }
+    match /refundRequests/{id} { allow read, write: if isAdmin(); }
+    match /contacts/{id} { allow read: if isAdmin(); allow write: if false; }
+    match /rateLimits/{uid} { allow read, write: if false; }
+
+    // --- Colecciones de la landing (formularios sin login, solo create) ---
+    // Origen: repo unbarber-landing, firestore.landing.rules. Mantener sincronizado.
+    function utmValida(u) {
+      return u is map
+        && u.keys().hasOnly(['source', 'medium', 'campaign'])
+        && (!('source' in u) || (u.source is string && u.source.size() <= 100))
+        && (!('medium' in u) || (u.medium is string && u.medium.size() <= 100))
+        && (!('campaign' in u) || (u.campaign is string && u.campaign.size() <= 100));
+    }
+
+    function texto(v, max) {
+      return v is string && v.size() > 0 && v.size() <= max;
+    }
+
+    match /lista_espera/{id} {
+      allow create: if request.resource.data.keys().hasOnly(
+            ['contacto', 'tipo_contacto', 'barrio', 'consentimiento', 'version_privacidad', 'utm', 'creado'])
+        && texto(request.resource.data.contacto, 100)
+        && request.resource.data.tipo_contacto in ['email', 'whatsapp']
+        && texto(request.resource.data.barrio, 60)
+        && request.resource.data.consentimiento == true
+        && texto(request.resource.data.version_privacidad, 20)
+        && utmValida(request.resource.data.utm)
+        && request.resource.data.creado == request.time;
+      allow read, update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    match /preregistros_barberos/{id} {
+      allow create: if request.resource.data.keys().hasOnly(
+            ['nombre', 'whatsapp', 'barrio', 'instagram', 'acepta_terminos', 'version_terminos', 'utm', 'creado'])
+        && texto(request.resource.data.nombre, 80)
+        && texto(request.resource.data.whatsapp, 30)
+        && texto(request.resource.data.barrio, 60)
+        && (!('instagram' in request.resource.data) || texto(request.resource.data.instagram, 60))
+        && request.resource.data.acepta_terminos == true
+        && texto(request.resource.data.version_terminos, 20)
+        && utmValida(request.resource.data.utm)
+        && request.resource.data.creado == request.time;
+      allow read, update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    match /arrepentimientos/{id} {
+      allow create: if request.resource.data.keys().hasOnly(
+            ['codigo', 'nombre', 'contacto', 'fecha_pago', 'detalle', 'creado'])
+        && texto(request.resource.data.codigo, 20)
+        && texto(request.resource.data.nombre, 80)
+        && texto(request.resource.data.contacto, 100)
+        && texto(request.resource.data.fecha_pago, 10)
+        && (!('detalle' in request.resource.data) || (request.resource.data.detalle is string && request.resource.data.detalle.size() <= 500))
+        && request.resource.data.creado == request.time;
+      allow read, update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}

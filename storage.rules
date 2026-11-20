@@ -1,0 +1,30 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isOwner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function isAdmin() { return request.auth != null && request.auth.token.admin == true; }
+    function isImage() {
+      return request.resource.contentType.matches('image/.*') && request.resource.size < 8 * 1024 * 1024;
+    }
+
+    // Avatar y portfolio: públicos para usuarios logueados, los escribe el dueño.
+    match /barbers/{uid}/public/{file=**} {
+      allow read: if request.auth != null;
+      allow write: if isOwner(uid) && isImage();
+    }
+    // DNI: privado.
+    match /barbers/{uid}/verification/{file=**} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) && isImage();
+    }
+    match /users/{uid}/avatar/{file=**} {
+      allow read: if request.auth != null;
+      allow write: if isOwner(uid) && isImage();
+    }
+    match /ratings/{uid}/{file=**} {
+      allow read: if request.auth != null;
+      allow write: if isOwner(uid) && isImage();
+    }
+  }
+}

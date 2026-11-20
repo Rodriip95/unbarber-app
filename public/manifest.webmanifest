@@ -1,0 +1,12 @@
+{
+  "name": "Unbarber",
+  "short_name": "Unbarber",
+  "description": "Encontrá barbero cerca, ahora o con turno.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "lang": "es-AR",
+  "icons": []
+}

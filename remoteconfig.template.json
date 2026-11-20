@@ -1,0 +1,19 @@
+{
+  "parameters": {
+    "membership_price_ars": {
+      "defaultValue": { "value": "20000" },
+      "description": "Precio de lista de la membresía de acceso de barberos, pago único, en pesos. Lo leen la app y la landing.",
+      "valueType": "NUMBER"
+    },
+    "membership_promo_percent": {
+      "defaultValue": { "value": "100" },
+      "description": "Descuento de la promo de membresía, 0 a 100. 100 = sin cargo.",
+      "valueType": "NUMBER"
+    },
+    "membership_promo_until": {
+      "defaultValue": { "value": "" },
+      "description": "Fin de la promo en ISO 8601 (ej. 2027-04-30T23:59:59-03:00). Vacío = sin fecha.",
+      "valueType": "STRING"
+    }
+  }
+}
