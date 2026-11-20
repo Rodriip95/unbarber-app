@@ -1,0 +1,65 @@
+name: Deploy
+
+# develop -> unbarber-desa (ambiente "desa")
+# main    -> unbarber-prd  (ambiente "prd", con aprobación manual)
+on:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_name == 'main' && 'prd' || 'desa' }}
+    env:
+      FIREBASE_ALIAS: ${{ github.ref_name == 'main' && 'prd' || 'desa' }}
+      APP_ENV: ${{ github.ref_name == 'main' && 'prd' || 'desa' }}
+      FIREBASE_VAPID_KEY: ${{ vars.FIREBASE_VAPID_KEY }}
+      SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix functions
+
+      - name: Credenciales de Firebase
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+
+      # Si el proyecto tiene más de una app web (app y landing), la variable FIREBASE_WEB_APP_ID del ambiente elige la de la app
+      - name: Config web del ambiente
+        env:
+          FIREBASE_WEB_APP_ID: ${{ vars.FIREBASE_WEB_APP_ID }}
+        run: npx -y firebase-tools@15 apps:sdkconfig WEB $FIREBASE_WEB_APP_ID --project "$FIREBASE_ALIAS" --json | node scripts/write-env.mjs
+
+      - run: npm run build
+
+      # Remote Config NO se despliega acá: precio y promo se manejan desde la consola
+      # y un deploy automático pisaría esos cambios. Ver docs/infra.md.
+      - name: Deploy
+        run: >
+          npx -y firebase-tools@15 deploy
+          --project "$FIREBASE_ALIAS"
+          --only hosting:app,firestore,storage,functions
+          --non-interactive --force
+          --message "${{ github.sha }}"
+
+      - name: Limpiar credenciales
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
