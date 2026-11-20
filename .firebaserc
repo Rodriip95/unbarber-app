@@ -1,12 +1,18 @@
 {
   "projects": {
-    "default": "lina-back"
+    "default": "unbarber-desa",
+    "desa": "unbarber-desa",
+    "prd": "unbarber-prd"
   },
   "targets": {
-    "lina-back": {
+    "unbarber-desa": {
       "hosting": {
-        "app": ["unbarber-app"],
-        "landing": ["unbarber-landing"]
+        "app": ["unbarber-desa"]
+      }
+    },
+    "unbarber-prd": {
+      "hosting": {
+        "app": ["unbarber-prd"]
       }
     }
   }

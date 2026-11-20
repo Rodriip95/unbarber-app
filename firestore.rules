@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Reglas de Firestore del proyecto lina-back (app y landing comparten base de datos).
+// Reglas de Firestore de unbarber-desa y unbarber-prd (app y landing comparten base de datos en cada ambiente).
 // El repo de la app es dueño de este archivo. Ver docs/specs/00-arquitectura.md.
 // Todo cambio de estado sensible (turnos, alertas, cortes, calificaciones, membresía)
 // lo escriben Cloud Functions con el Admin SDK, que no pasa por estas reglas.

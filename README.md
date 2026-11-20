@@ -1,6 +1,6 @@
 # Unbarber · App
 
-Web app instalable (PWA) que conecta clientes con barberos cercanos en Argentina. Una sola app con dos modos: **modo cliente** (azul) y **modo barbero** (rojo). Este proyecto es independiente de la landing: tiene su propio repositorio y su propio sitio, pero comparten el mismo proyecto de Firebase (`lina-back`).
+Web app instalable (PWA) que conecta clientes con barberos cercanos en Argentina. Una sola app con dos modos: **modo cliente** (azul) y **modo barbero** (rojo). Este proyecto es independiente de la landing: tiene su propio repositorio y su propio sitio, pero comparten los proyectos de Firebase de cada ambiente (`unbarber-desa` y `unbarber-prd`).
 
 > Fuente de verdad del producto: [Unbarber · Blueprint de producto](https://claude.ai/artifact/3Eh5NFbbXimfRb5U681k55) (pestañas Producto, App, Diseño y Decisiones técnicas).
 > Diseño vigente: [V2 "Poste"](https://claude.ai/artifact/UJRTduMd8tdekdXRPW1jTW).
@@ -41,7 +41,7 @@ Alrededor del core:
 | Seguridad | Reglas de Firestore y Storage, App Check, rol admin con custom claims |
 | Métricas y errores | Firebase Analytics, Sentry (plan gratis) |
 
-El detalle técnico está en [docs/specs/00-arquitectura.md](docs/specs/00-arquitectura.md).
+El detalle técnico está en [docs/specs/00-arquitectura.md](docs/specs/00-arquitectura.md) y los ambientes y el deploy en [docs/infra.md](docs/infra.md).
 
 ## Documentación
 
@@ -84,12 +84,11 @@ Del 1 al 28 de febrero, los barberos ya registrados usan la app en beta cerrada.
 # Requisitos: Node 22+, Firebase CLI (npm i -g firebase-tools), Java 21+ para los emuladores
 npm install
 npm install --prefix functions
-cp .env.example .env.local        # completar con la config web del proyecto lina-back
 npm run emulators                 # Auth, Firestore, Functions, Storage y Hosting locales
 npm run dev                       # Next.js en http://localhost:3000
 ```
 
-Sin `.env.local` la app usa el proyecto `demo-unbarber`, que solo funciona contra los emuladores.
+Sin `.env.local` la app usa el proyecto `demo-unbarber`, que solo funciona contra los emuladores. Para apuntar el desarrollo local a `unbarber-desa`: `firebase login` y `npm run env:desa`.
 
 | Script | Qué hace |
 |---|---|
@@ -98,23 +97,29 @@ Sin `.env.local` la app usa el proyecto `demo-unbarber`, que solo funciona contr
 | `npm run lint` / `npm run typecheck` | ESLint y TypeScript |
 | `npm test` | Pruebas unitarias (Vitest) |
 | `npm run emulators` | Emuladores de Firebase con datos de `seed/` |
-| `npm run deploy` | Despliega hosting de la app, reglas, índices, Functions y Remote Config |
-| `npm run deploy:hosting` | Despliega solo el sitio de la app |
+| `npm run env:desa` | Escribe `.env.local` con la config web de `unbarber-desa` |
+| `npm run deploy:desa` | Deploy manual a desa (normalmente lo hace GitHub Actions) |
+| `npm run rc:deploy:desa` / `rc:deploy:prd` | Sube la plantilla de Remote Config (solo la primera vez o al agregar claves) |
 
 Versiones: Next.js 16 (App Router, exportación estática), React 19, Tailwind CSS 4, Firebase JS SDK 13, firebase-functions 7, firebase-admin 14, Node 22.
 
-## Un solo proyecto de Firebase
+## Ambientes: desa y prd
 
-Decisión de Rodri (20/11/2026): todo se maneja desde un mismo panel de Firebase, el proyecto **`lina-back`**, compartido con la landing.
+Decisión de Rodri (20/11/2026): dos proyectos de Firebase, uno por ambiente, cada uno atado a una rama. App y landing comparten el proyecto de cada ambiente. Detalle completo en [docs/infra.md](docs/infra.md).
+
+| Ambiente | Proyecto | Rama | Deploy |
+|---|---|---|---|
+| Desarrollo | `unbarber-desa` | `develop` | Automático en cada push |
+| Producción | `unbarber-prd` | `main` | Automático, con aprobación de Rodri |
 
 | Pieza | Dónde |
 |---|---|
-| Sitio de la app | Hosting, sitio `unbarber-app` (target `app`), dominio `app.<dominio>` |
-| Sitio de la landing | Hosting, sitio `unbarber-landing` (target `landing`), dominio raíz. Lo despliega el repo de la landing con `firebase deploy --only hosting:landing` |
-| Auth, Firestore, Storage, Functions, FCM | Compartidos. **Este repo es dueño** de `firestore.rules`, `firestore.indexes.json`, `storage.rules` y la plantilla de Remote Config. Las colecciones de formularios de la landing (`lista_espera`, `preregistros_barberos`, `arrepentimientos`) tienen sus reglas acá |
-| Remote Config | `membership_price_ars` (20000), `membership_promo_percent` (100), `membership_promo_until` (ISO, opcional). Lo leen la app y la landing; se cambia desde la consola sin desplegar |
+| Sitio de la app | Hosting, sitio por defecto de cada proyecto (target `app`). En prd, dominio `app.<dominio>` |
+| Sitio de la landing | Hosting, sitio adicional en cada proyecto (target `landing`). Lo despliega el repo de la landing |
+| Auth, Firestore, Storage, Functions, FCM | Compartidos con la landing dentro de cada ambiente. **Este repo es dueño** de `firestore.rules`, `firestore.indexes.json`, `storage.rules` y la plantilla de Remote Config, incluidas las reglas de los formularios de la landing (`lista_espera`, `preregistros_barberos`, `arrepentimientos`) |
+| Remote Config | `membership_price_ars` (20000), `membership_promo_percent` (100), `membership_promo_until` (ISO, opcional). Lo leen la app y la landing; se cambia desde la consola, el deploy automático no lo toca |
 
-Desarrollo local con emuladores; para QA antes de producción se usan canales de vista previa de Hosting (`firebase hosting:channel:deploy qa --only app`), que dan una URL temporal sin tocar el sitio publicado.
+Cada PR hacia `develop` se publica en un canal de vista previa de `unbarber-desa` y la URL aparece en el PR.
 
 La landing manda "Registrate gratis" a `app.<dominio>/registro?rol=barbero&utm_source=…`. Esa ruta guarda el rol y los UTM y los copia al usuario al terminar el onboarding.
 

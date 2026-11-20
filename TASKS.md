@@ -12,7 +12,7 @@ Plan de trabajo por sprint. Cada tarea tiene un ID (`T-xxx`), la historia del ba
 | ID | Tarea | Historia | Spec | Prio | Tam | Depende de | Estado |
 |---|---|---|---|---|---|---|---|
 | T-001 | Repositorio `Rodriip95/unbarber-app` en GitHub, ramas `main` y `develop`, protección de `main` | Base | 00 | P0 | S | — | ✱ (repo creado por Rodri) |
-| T-002 | Usar el proyecto de Firebase existente `lina-back` (decisión de Rodri; ya tiene la app web "unbarber"): crear sitios de Hosting `unbarber-app` y `unbarber-landing`, activar Firestore, Storage y Blaze con alerta de presupuesto de US$5 | Base | 00 | P0 | S | — | ✱ |
+| T-002 | Proyectos `unbarber-desa` y `unbarber-prd` (creados por Rodri): Blaze con alerta de US$5, Firestore en `southamerica-east1`, Storage, Auth con Google, app Web registrada, cuenta de servicio de deploy (ver `docs/infra.md`) | Base | 00 | P0 | M | — | ✱ |
 | T-003 | Elegir y comprar dominio; conectar a Firebase Hosting de prod | Base | 00 | P0 | S | T-002 | ⛔ decisión de Rodri |
 | T-004 | Habilitar Auth (Google), Firestore, Storage, FCM (VAPID key) y App Check en ambos proyectos | Base | 00 | P0 | S | T-002 | ○ |
 | T-005 | Crear proyecto de Sentry (plan gratis) y propiedad de Analytics | Base | 12 | P1 | S | T-002 | ○ |
@@ -22,10 +22,10 @@ Plan de trabajo por sprint. Cada tarea tiene un ID (`T-xxx`), la historia del ba
 | ID | Tarea | Historia | Spec | Prio | Tam | Depende de | Estado |
 |---|---|---|---|---|---|---|---|
 | T-010 | Iniciar Next.js (App Router, TS, Tailwind, `output: 'export'`), ESLint, Prettier, Vitest | Base | 00 | P0 | S | T-001 | ✓ |
-| T-011 | `firebase.json` con Hosting (target `app`), rewrites de rutas dinámicas, emuladores y Remote Config; `.firebaserc` con `lina-back` | Base | 00 | P0 | S | T-010 | ✓ |
+| T-011 | `firebase.json` con Hosting (target `app`), rewrites, emuladores y Remote Config; `.firebaserc` con alias `desa` y `prd` | Base | 00 | P0 | S | T-010 | ✓ |
 | T-012 | `lib/firebase`: init, Auth, Firestore, Storage, Messaging, App Check, conexión a emuladores en local | Base | 00 | P0 | M | T-011, T-004 | ○ |
 | T-013 | Proyecto `functions/` (TS, Node 22, región `southamerica-east1`) con `onUserCreate` y `completeOnboarding` iniciales | Base | 00 | P0 | M | T-011 | ✓ |
-| T-014 | CI en GitHub Actions: lint, typecheck, unit, build (✓); falta deploy desde `main` con aprobación y canal de vista previa para QA | Base | 00 | P0 | M | T-010, T-013, T-002 | ✱ |
+| T-014 | CI/CD: `ci.yml` (checks), `preview.yml` (canal de vista previa por PR), `deploy.yml` (develop → desa, main → prd con aprobación); ambientes, secretos y protección de ramas en GitHub | Base | 00 | P0 | M | T-010, T-013, T-002 | ✱ (workflows listos; falta configurar GitHub) |
 | T-015 | Tokens V2 en Tailwind, fuentes con `next/font`, variable de color por modo | Todas | 01 | P0 | S | T-010 | ✓ |
 | T-016 | Componentes base: Button, Card, Tag, Toggle, Sheet, Toast, EmptyState, PoleStripe; página `/dev/ui` | Todas | 01 | P0 | L | T-015 | ○ |
 | T-017 | Layout por modo: BottomNav cliente y barbero, ModeSwitch, guardas de ruta (sin sesión, sin onboarding, sin rol) | APP-01 | 01, 02 | P0 | M | T-016, T-012 | ○ |

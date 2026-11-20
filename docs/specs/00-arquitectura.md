@@ -233,13 +233,13 @@ Cada regla tiene prueba en `tests/rules/` con el emulador.
 
 ## Entornos y despliegue
 
-- **Un solo proyecto de Firebase, `lina-back`, compartido con la landing** (decisión de Rodri, 20/11/2026). Hosting con dos sitios: `unbarber-app` (target `app`, este repo) y `unbarber-landing` (target `landing`, repo de la landing). Este repo es dueño de las reglas, índices y Remote Config.
-- Desarrollo con emuladores; QA en canales de vista previa de Hosting (`firebase hosting:channel:deploy qa --only app`).
-- Remote Config: `membership_price_ars`, `membership_promo_percent`, `membership_promo_until` (plantilla en `remoteconfig.template.json`).
-- Variables públicas en `.env.local` (`NEXT_PUBLIC_FIREBASE_*`, `NEXT_PUBLIC_VAPID_KEY`, `NEXT_PUBLIC_SENTRY_DSN`). Nada secreto en el frontend.
-- Ramas: `main` (producción), `develop` (pruebas), ramas de feature `feat/APP-xx-descripcion`.
-- CI con GitHub Actions (gratis en repo privado hasta la cuota): lint, typecheck, unit, build; deploy a producción al mergear a `main` con aprobación manual.
-- Alerta de presupuesto de US$5 al activar Blaze.
+- **Dos proyectos de Firebase, uno por ambiente** (decisión de Rodri, 20/11/2026): `unbarber-desa` (rama `develop`) y `unbarber-prd` (rama `main`). App y landing comparten el proyecto de cada ambiente: la app usa el sitio de Hosting por defecto (target `app`) y la landing un sitio adicional (target `landing`). Este repo es dueño de las reglas, índices y Remote Config. Detalle en `docs/infra.md`.
+- Desarrollo con emuladores; cada PR a `develop` se publica en un canal de vista previa de `unbarber-desa`.
+- Remote Config: `membership_price_ars`, `membership_promo_percent`, `membership_promo_until` (plantilla en `remoteconfig.template.json`, se sube a mano para no pisar cambios de la consola).
+- La config web (`NEXT_PUBLIC_FIREBASE_*`) no se versiona: en CI se lee del proyecto con `firebase apps:sdkconfig` y se escribe al construir. Nada secreto en el frontend.
+- Ramas: `main` (producción, `unbarber-prd`), `develop` (desarrollo, `unbarber-desa`), ramas de feature `feat/APP-xx-descripcion`.
+- CI/CD con GitHub Actions: `ci.yml` en cada PR, `preview.yml` para canales de vista previa, `deploy.yml` despliega `develop` a desa y `main` a prd (con aprobación manual).
+- Alerta de presupuesto de US$5 en cada proyecto al activar Blaze.
 
 ## Fuera de alcance del MVP
 

@@ -10,8 +10,12 @@
     "test": "vitest run",
     "emulators": "firebase emulators:start --import=./seed --export-on-exit=./seed",
     "functions:build": "npm --prefix functions run build",
-    "deploy": "npm run build && firebase deploy --only hosting:app,firestore,storage,functions,remoteconfig",
-    "deploy:hosting": "npm run build && firebase deploy --only hosting:app"
+    "use:desa": "firebase use desa",
+    "use:prd": "firebase use prd",
+    "env:desa": "firebase apps:sdkconfig WEB --project desa --json | APP_ENV=desa node scripts/write-env.mjs .env.local",
+    "deploy:desa": "firebase apps:sdkconfig WEB --project desa --json | APP_ENV=desa node scripts/write-env.mjs && npm run build && firebase deploy --project desa --only hosting:app,firestore,storage,functions",
+    "rc:deploy:desa": "firebase deploy --project desa --only remoteconfig",
+    "rc:deploy:prd": "firebase deploy --project prd --only remoteconfig"
   },
   "dependencies": {
     "firebase": "^13.4.0",
