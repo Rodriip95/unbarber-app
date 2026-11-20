@@ -24,9 +24,11 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Config web de desa
+        env:
+          FIREBASE_WEB_APP_ID: ${{ vars.FIREBASE_WEB_APP_ID }}
         run: |
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/sa.json"
-          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" npx -y firebase-tools@15 apps:sdkconfig WEB --project desa --json | APP_ENV=desa node scripts/write-env.mjs
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" npx -y firebase-tools@15 apps:sdkconfig WEB $FIREBASE_WEB_APP_ID --project desa --json | APP_ENV=desa node scripts/write-env.mjs
           rm -f "$RUNNER_TEMP/sa.json"
       - run: npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0

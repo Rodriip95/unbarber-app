@@ -32,7 +32,7 @@ feat/APP-xx-algo ──PR──► develop ──(deploy automático)──► u
 | `.github/workflows/preview.yml` | PR a `develop` | Canal de vista previa en `unbarber-desa` (vence a los 7 días) |
 | `.github/workflows/deploy.yml` | Push a `develop` o `main` | Vuelve a correr CI y despliega al proyecto del ambiente |
 
-La config web de Firebase (apiKey, appId, etc.) **no está en el repo**: el deploy la lee del proyecto con `firebase apps:sdkconfig` y la escribe en `.env.production.local` durante el build (`scripts/write-env.mjs`).
+La config web de Firebase (apiKey, appId, etc.) **no está en el repo**: el deploy la lee del proyecto con `firebase apps:sdkconfig` y la escribe en `.env.production.local` durante el build (`scripts/write-env.mjs`). Si el proyecto tiene más de una app web (la de la app y la de la landing), se carga en cada ambiente de GitHub la variable `FIREBASE_WEB_APP_ID` con el ID de la app web de la app; la landing hace lo mismo con la suya.
 
 ### Remote Config no se despliega solo
 

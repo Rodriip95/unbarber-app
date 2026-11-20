@@ -42,8 +42,11 @@ jobs:
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/sa.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
 
+      # Si el proyecto tiene más de una app web (app y landing), la variable FIREBASE_WEB_APP_ID del ambiente elige la de la app
       - name: Config web del ambiente
-        run: npx -y firebase-tools@15 apps:sdkconfig WEB --project "$FIREBASE_ALIAS" --json | node scripts/write-env.mjs
+        env:
+          FIREBASE_WEB_APP_ID: ${{ vars.FIREBASE_WEB_APP_ID }}
+        run: npx -y firebase-tools@15 apps:sdkconfig WEB $FIREBASE_WEB_APP_ID --project "$FIREBASE_ALIAS" --json | node scripts/write-env.mjs
 
       - run: npm run build
 
