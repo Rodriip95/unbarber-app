@@ -1,12 +1,12 @@
 {
   "name": "Unbarber",
   "short_name": "Unbarber",
-  "description": "Encontrá barbero cerca, ahora o con turno.",
+  "description": "Tu próximo barbero, a la vuelta de la esquina.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#182d26",
+  "theme_color": "#182d26",
   "lang": "es-AR",
   "icons": []
 }

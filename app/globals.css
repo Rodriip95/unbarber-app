@@ -1,60 +1,139 @@
 @import "tailwindcss";
 
-/* Sistema de diseño V2 "Poste". Ver docs/specs/01-diseno-ui.md
-   Regla madre: rojo = barbero y urgencia, azul = cliente y turnos, el resto blanco y negro. */
+/* Sistema de diseño V3 "Esquina" (25/11/2026). Reemplaza a V2 "Poste". Ver docs/specs/01-diseno-ui.md
+   Verde pino de base, crema como papel, terracota y azul pizarra del poste como acentos.
+   Regla madre: terracota = barbero y urgencia (AHORA), azul pizarra = cliente y turnos. */
 
 :root {
-  --ink: #111111;
-  --red: #e0262b;
-  --red-soft: #fde7e7;
-  --blue: #1f49c7;
-  --blue-soft: #e6ecfb;
-  --gray: #f2f2f2;
-  --gray-text: #555555;
-  --mode: var(--blue);
-  --mode-soft: var(--blue-soft);
+  --pine: #182d26;
+  --pine-2: #233b32;
+  --moss: #5a6e62;
+  --sage: #c7cec4;
+  --sage-soft: #e4e8e1;
+  --cream: #f6f3ee;
+  --paper: #fdf8ee;
+  --line: #ddd7cc;
+  --muted: #5f6b65;
+  --terra: #c4523a;
+  --terra-soft: #f6e2db;
+  --peach: #f2b48c;
+  --slate: #425e78;
+  --slate-soft: #e1e7ee;
+  --ok: #3e7a4f;
+  --mode: var(--slate);
+  --mode-soft: var(--slate-soft);
 }
 
-body[data-mode="barber"] {
-  --mode: var(--red);
-  --mode-soft: var(--red-soft);
+[data-mode="barber"] {
+  --mode: var(--terra);
+  --mode-soft: var(--terra-soft);
 }
 
 @theme inline {
-  --color-white: #ffffff;
-  --color-ink: var(--ink);
-  --color-red: var(--red);
-  --color-red-soft: var(--red-soft);
-  --color-blue: var(--blue);
-  --color-blue-soft: var(--blue-soft);
-  --color-gray: var(--gray);
-  --color-gray-text: var(--gray-text);
+  --color-pine: var(--pine);
+  --color-pine-2: var(--pine-2);
+  --color-moss: var(--moss);
+  --color-sage: var(--sage);
+  --color-sage-soft: var(--sage-soft);
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-terra: var(--terra);
+  --color-terra-soft: var(--terra-soft);
+  --color-peach: var(--peach);
+  --color-slate: var(--slate);
+  --color-slate-soft: var(--slate-soft);
+  --color-ok: var(--ok);
   --color-mode: var(--mode);
   --color-mode-soft: var(--mode-soft);
 
-  --font-display: var(--font-archivo-black);
-  --font-sans: var(--font-space-grotesk);
+  --font-serif: var(--font-dm-serif), "DM Serif Text", Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-dm-sans), "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  /* Sin radio en ningún elemento */
-  --radius-xs: 0;
-  --radius-sm: 0;
-  --radius-md: 0;
-  --radius-lg: 0;
-  --radius-xl: 0;
-  --radius-2xl: 0;
-  --radius-3xl: 0;
-  --radius-4xl: 0;
-
-  --shadow-hard: 4px 4px 0 0 var(--ink);
+  /* Botón "pastilla" con sombra inferior dura, como el de Empezar con Google */
+  --shadow-press: 0 4px 0 0 rgb(0 0 0 / 0.28);
+  --shadow-card: 0 1px 0 0 rgb(24 45 38 / 0.06), 0 8px 24px -12px rgb(24 45 38 / 0.25);
 }
 
+html,
 body {
-  background: #ffffff;
-  color: var(--ink);
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  background: var(--cream);
+  color: var(--pine);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+.font-serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+/* La itálica de DM Serif Text es el gesto de la marca: "a la vuelta de la esquina" */
+.accent {
+  font-style: italic;
+  color: var(--terra);
+}
+.on-dark .accent {
+  color: var(--peach);
+}
+
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--terra);
+}
+.on-dark .eyebrow {
+  color: var(--peach);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 *:focus-visible {
   outline: 2px solid var(--mode);
   outline-offset: 2px;
+}
+
+@keyframes pole-spin {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 56px;
+  }
+}
+.pole-loader {
+  background: repeating-linear-gradient(-30deg, var(--terra) 0 10px, var(--paper) 10px 18px, var(--slate) 18px 28px, var(--paper) 28px 36px);
+  background-size: 100% 56px;
+  animation: pole-spin 1s linear infinite;
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.sheet-in {
+  animation: sheet-up 0.22s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pole-loader,
+  .sheet-in {
+    animation: none;
+  }
 }
