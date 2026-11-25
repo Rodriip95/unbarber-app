@@ -1,37 +1,39 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo_Black, Space_Grotesk } from "next/font/google";
+import { DM_Sans, DM_Serif_Text } from "next/font/google";
 import "./globals.css";
 
-const archivoBlack = Archivo_Black({
-  variable: "--font-archivo-black",
+// DM Serif Text existe en regular e itálica: los títulos juegan con las dos.
+// DM Sans (misma familia DM) lleva el texto y los botones en regular, semibold y bold.
+const dmSerif = DM_Serif_Text({
+  variable: "--font-dm-serif",
   weight: "400",
+  style: ["normal", "italic"],
   subsets: ["latin"],
 });
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  weight: ["400", "500", "700"],
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "Unbarber",
-  description: "Encontrá barbero cerca, ahora o con turno.",
+  description: "Tu próximo barbero, a la vuelta de la esquina.",
   manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#182d26",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-AR" className={`${archivoBlack.variable} ${spaceGrotesk.variable} h-full antialiased`}>
-      <body data-mode="client" className="min-h-full flex flex-col">
-        <div className="mx-auto w-full max-w-[480px] flex-1 flex flex-col">{children}</div>
-      </body>
+    <html lang="es-AR" className={`${dmSerif.variable} ${dmSans.variable} h-full antialiased`}>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

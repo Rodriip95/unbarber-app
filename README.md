@@ -1,9 +1,9 @@
 # Unbarber · App
 
-Web app instalable (PWA) que conecta clientes con barberos cercanos en Argentina. Una sola app con dos modos: **modo cliente** (azul) y **modo barbero** (rojo). Este proyecto es independiente de la landing: tiene su propio repositorio y su propio sitio, pero comparten el mismo proyecto de Firebase (`lina-back`).
+Web app instalable (PWA) que conecta clientes con barberos cercanos en Argentina. Una sola app con dos modos: **modo cliente** (azul pizarra) y **modo barbero** (terracota). Este proyecto es independiente de la landing: tiene su propio repositorio y su propio sitio, pero comparten el mismo proyecto de Firebase (`lina-back`).
 
 > Fuente de verdad del producto: [Unbarber · Blueprint de producto](https://claude.ai/artifact/3Eh5NFbbXimfRb5U681k55) (pestañas Producto, App, Diseño y Decisiones técnicas).
-> Diseño vigente: [V2 "Poste"](https://claude.ai/artifact/UJRTduMd8tdekdXRPW1jTW).
+> Diseño vigente: V3 "Esquina" (25/11/2026), ver [01-diseno-ui](docs/specs/01-diseno-ui.md). Prototipo navegable: `npm run dev` o `npm run demo:build`.
 > Si algo de este repo contradice al documento maestro, manda el documento maestro y se corrige acá.
 
 ## Qué hace la app
@@ -48,7 +48,7 @@ El detalle técnico está en [docs/specs/00-arquitectura.md](docs/specs/00-arqui
 | Spec | Tema | Historias |
 |---|---|---|
 | [00-arquitectura](docs/specs/00-arquitectura.md) | Stack, estructura del repo, modelo de datos, reglas, Functions, entornos | Base |
-| [01-diseno-ui](docs/specs/01-diseno-ui.md) | Sistema de diseño V2 "Poste" en código: tokens, componentes, navegación por modo | Todas |
+| [01-diseno-ui](docs/specs/01-diseno-ui.md) | Sistema de diseño V3 "Esquina" en código: tokens, componentes, navegación por modo | Todas |
 | [02-cuenta-onboarding](docs/specs/02-cuenta-onboarding.md) | Login con Google, rol, WhatsApp, push, Términos, mayoría de edad, borrar cuenta | APP-01, APP-02 |
 | [03-perfil-barbero](docs/specs/03-perfil-barbero.md) | Perfil, servicios, horarios, portfolio, modalidad y ubicación | APP-03 |
 | [04-admin-verificacion](docs/specs/04-admin-verificacion.md) | Panel de admin, aprobación de barberos, moderación | APP-04 |

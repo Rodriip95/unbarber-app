@@ -46,3 +46,6 @@ next-env.d.ts
 *-debug.log
 functions/lib/
 functions/node_modules/
+
+# Prototipo autónomo (npm run demo:build)
+/dist-demo
