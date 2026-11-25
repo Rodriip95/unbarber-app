@@ -32,7 +32,7 @@ Verde pino y crema son la casa. Los dos colores del poste marcan el modo: **terr
 
 - Botones en pastilla (`rounded-full`) con sombra inferior dura (`shadow-press`, 4 px) que se aplasta al tocar, como "Empezar con Google".
 - Tarjetas con radio 16 a 24 px, borde fino `line` y fondo `paper`. La tarjeta protagonista de cada pantalla va en pino.
-- Fotos: lugares reservados en `moss`/`sage` con rayado suave mientras no haya fotos reales (componente `Photo`, acepta `src`).
+- Fotos: mientras no haya fotos reales, skeleton gris `#C7CDC3` con radio 16 px y brillo suave (`animate-pulse`), igual que en la landing (pedido de Rodri, 25/11/2026). El componente `Photo` acepta `src` para cuando lleguen.
 - El poste en movimiento (`.pole-loader`) es el cargador ("Buscando barberos libres…").
 
 ## Navegación

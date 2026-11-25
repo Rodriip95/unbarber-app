@@ -150,13 +150,13 @@ export function Avatar({ name, tone = "pine", size = 48, ring = false }: { name:
 }
 
 /**
- * Lugar para fotos reales de barberías. Mientras no estén, un bloque en verde y salvia
- * (como la referencia de la landing) con la leyenda de lo que va.
+ * Lugar para fotos reales de barberías. Mientras no estén (pedido de Rodri, 25/11/2026),
+ * un skeleton gris con brillo suave, igual que en la landing.
+ * `variant` queda por compatibilidad y no cambia el color.
  */
 export function Photo({
   label,
   className = "",
-  variant = "moss",
   src,
 }: {
   label?: string;
@@ -164,19 +164,10 @@ export function Photo({
   variant?: "moss" | "sage" | "pine";
   src?: string;
 }) {
-  const bg = { moss: "bg-moss text-paper/70", sage: "bg-sage text-pine/60", pine: "bg-pine-2 text-paper/60" }[variant];
   // eslint-disable-next-line @next/next/no-img-element -- export estático, sin optimizador
   if (src) return <img src={src} alt={label ?? ""} className={`object-cover ${className}`} />;
-  return (
-    <div
-      className={`relative overflow-hidden ${bg} ${className}`}
-      style={{ backgroundImage: "repeating-linear-gradient(135deg, rgb(255 255 255 / 0.05) 0 2px, transparent 2px 14px)" }}
-      role="img"
-      aria-label={label ?? "Foto"}
-    >
-      {label && <span className="absolute bottom-2 right-3 text-[10px] font-semibold uppercase tracking-[0.12em]">{label}</span>}
-    </div>
-  );
+  const radius = className.includes("rounded") ? "" : "rounded-2xl";
+  return <div aria-hidden className={`animate-pulse bg-[#c7cdc3] motion-reduce:animate-none ${radius} ${className}`} />;
 }
 
 export function Stars({ value, size = 14 }: { value: number; size?: number }) {

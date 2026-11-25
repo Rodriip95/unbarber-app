@@ -20,7 +20,7 @@ export function BarberProfile({ barberId }: { barberId: string }) {
   return (
     <main className="flex flex-col gap-6 pb-32">
       <div className="relative">
-        <Photo className="aspect-[16/11] w-full" variant={b.kind === "centro" ? "pine" : "moss"} label={`Foto de ${b.shop}`} />
+        <Photo className="aspect-[16/11] w-full rounded-none" variant={b.kind === "centro" ? "pine" : "moss"} label={`Foto de ${b.shop}`} />
         <div className="absolute inset-x-0 top-0 flex justify-between p-3">
           <button type="button" onClick={back} aria-label="Volver" className="grid size-10 place-items-center rounded-full bg-paper/95 text-pine shadow-card">
             <ChevronLeft className="size-6" />
