@@ -132,7 +132,7 @@ export function BarberProfile({ barberId }: { barberId: string }) {
 
       {!self && (
         <div
-          className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-[440px] grid-cols-2 gap-3 border-t border-line bg-paper/95 px-4 pt-3 backdrop-blur"
+          className="fixed inset-x-0 bottom-0 z-30 mx-auto grid md:max-w-[440px] grid-cols-2 gap-3 border-t border-line bg-paper/95 px-4 pt-3 backdrop-blur"
           style={{ paddingBottom: "max(14px, env(safe-area-inset-bottom, 0px))" }}
         >
           <Btn
@@ -286,7 +286,7 @@ export function BookScreen({ barberId, serviceId }: { barberId: string; serviceI
       </Section>
 
       <div
-        className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[440px] flex-col gap-2 border-t border-line bg-paper/95 px-4 pt-3 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-30 mx-auto flex md:max-w-[440px] flex-col gap-2 border-t border-line bg-paper/95 px-4 pt-3 backdrop-blur"
         style={{ paddingBottom: "max(14px, env(safe-area-inset-bottom, 0px))" }}
       >
         <p className="text-sm text-muted">

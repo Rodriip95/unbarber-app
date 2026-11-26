@@ -37,10 +37,12 @@ Verde pino y crema son la casa. Los dos colores del poste marcan el modo: **terr
 
 ## Navegación
 
-| Modo | Pestañas |
-|---|---|
-| Cliente | Inicio · Buscar · Mis turnos · Perfil |
-| Barbero | Bandeja · Agenda · Clientes · Perfil |
+| Modo | Estilo | Secciones |
+|---|---|---|
+| Cliente | Drawer lateral (botón de menú en la barra superior) | Inicio · Buscar · Mis turnos · Perfil |
+| Barbero | Pestañas inferiores | Bandeja · Agenda · Clientes · Perfil |
+
+En modo cliente la barra superior fija lleva el menú a la izquierda, el logo al centro (vuelve a Inicio) y las iniciales a la derecha (abre Perfil). El drawer muestra la cuenta arriba y las secciones; se cierra tocando afuera, con Escape o al elegir una sección.
 
 Flujo de entrada: login con Google → Términos (resumen + 18+) → "¿Qué estás buscando?" (nuevo barbero o nuevos clientes, con beneficios) → inicio del modo elegido. El modo se cambia desde Perfil.
 

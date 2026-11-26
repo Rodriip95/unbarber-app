@@ -620,7 +620,7 @@ export function NewAppointment({ clientId }: { clientId?: string }) {
           ))}
         </div>
       </Section>
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-[440px] border-t border-line bg-paper/95 px-4 pt-3 backdrop-blur" style={{ paddingBottom: "max(14px, env(safe-area-inset-bottom, 0px))" }}>
+      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto md:max-w-[440px] border-t border-line bg-paper/95 px-4 pt-3 backdrop-blur" style={{ paddingBottom: "max(14px, env(safe-area-inset-bottom, 0px))" }}>
         <Btn
           block
           size="lg"

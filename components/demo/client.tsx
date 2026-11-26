@@ -1,12 +1,12 @@
 "use client";
 
-import { ArrowRight, Bell, CalendarPlus, LogOut, MapPin, Phone, Repeat, RotateCcw, Scissors, Store } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { BARBERS } from "@/lib/demo/data";
+import { ArrowRight, Bell, CalendarPlus, Check, Clock, LogOut, MapPin, Phone, Repeat, RotateCcw, Scissors, SlidersHorizontal, Store } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { BARBERS, MODALITY_LABEL, type Barber, type Modality } from "@/lib/demo/data";
 import { useDemo } from "@/lib/demo/store";
-import { dayLabel, googleCalendarUrl, km } from "@/lib/demo/time";
-import { BarberCard, BarberTile, HomeHeader, STATUS } from "./shared";
-import { Avatar, Btn, Card, Chip, LiveDot, Section, Tag, TopBar, WaIcon } from "./ui";
+import { dayLabel, formatArs, googleCalendarUrl, km } from "@/lib/demo/time";
+import { BarberCard, BarberTile, STATUS } from "./shared";
+import { Avatar, Btn, Card, Chip, LiveDot, Section, Sheet, Tag, TopBar, WaIcon } from "./ui";
 
 const MY_ZONE = "Villa Crespo";
 
@@ -16,15 +16,16 @@ export function ClientHome() {
   const { s, go, tab, barber, openWa } = useDemo();
   const first = s.account?.name.split(" ")[0];
   const free = BARBERS.filter((b) => b.availableNow);
-  const next = s.appointments
+  const upcoming = s.appointments
     .filter((a) => a.clientId === "me" && a.day >= 0 && (a.status === "confirmed" || a.status === "requested"))
-    .sort((a, b) => a.day - b.day)[0];
-  const nearby = [...BARBERS].sort((a, b) => a.distanceKm - b.distanceKm);
+    .sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));
+  const next = upcoming[0];
+  const more = upcoming.length - 1;
+  const nearby = [...BARBERS].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 5);
 
   return (
-    <main className="flex flex-col gap-7 pb-28">
-      <HomeHeader />
-      <div className="px-4">
+    <main className="flex flex-col gap-7 pb-12">
+      <div className="px-4 pt-2">
         <h1 className="text-[40px] leading-[1.02]">
           ¿Te cortás hoy, <span className="accent">{first}?</span>
         </h1>
@@ -33,46 +34,53 @@ export function ClientHome() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 px-4">
-        <button
-          type="button"
-          onClick={() => go({ id: "ahora" })}
-          className="on-dark relative flex flex-col gap-3 overflow-hidden rounded-3xl bg-pine p-6 text-left text-paper shadow-card active:scale-[0.99]"
-        >
+      {s.alert.status !== "none" && (
+        <div className="px-4">
+          <ZoneAlertCard />
+        </div>
+      )}
+
+      <section aria-labelledby="home-corte" className="px-4">
+        <div className="on-dark relative flex flex-col gap-3 overflow-hidden rounded-3xl bg-pine p-6 text-paper shadow-card">
           <span className="flex items-center gap-2 text-sm text-paper/80">
             <LiveDot /> {free.length} barberos libres cerca
           </span>
-          <span className="font-serif text-[40px] leading-none">
-            Cortarme <span className="accent">ahora</span>
-          </span>
-          <span className="max-w-[240px] text-[15px] text-paper/75">Mirá quién tiene el sillón libre y escribile por WhatsApp.</span>
-          <span className="mt-1 inline-flex min-h-11 items-center gap-2 self-start rounded-full bg-paper px-5 text-sm font-semibold text-pine shadow-press">
-            Ver quién está libre <ArrowRight className="size-4" />
-          </span>
+          <h2 id="home-corte" className="max-w-[230px] font-serif text-[36px] leading-[1.02]">
+            ¿Ahora o con <span className="accent">turno?</span>
+          </h2>
+          <p className="max-w-[240px] text-[15px] text-paper/75">
+            Escribile a quien tiene el sillón libre, o reservá día y horario.
+          </p>
+          <div className="relative z-10 mt-2 flex flex-col gap-2.5">
+            <Btn variant="paper" block onClick={() => go({ id: "ahora" })}>
+              <Scissors className="size-4" /> Cortarme ahora
+            </Btn>
+            <Btn variant="outline-light" block onClick={() => tab({ id: "c-search" })}>
+              <CalendarPlus className="size-4" /> Sacar turno
+            </Btn>
+          </div>
           <span
             aria-hidden
-            className="pole-loader absolute -right-6 top-6 h-40 w-12 rotate-[18deg] rounded-full opacity-90 ring-4 ring-pine-2"
+            className="pole-loader absolute -right-5 top-5 h-32 w-11 rotate-[18deg] rounded-full opacity-90 ring-4 ring-pine-2"
           />
-        </button>
-        <button
-          type="button"
-          onClick={() => tab({ id: "c-search" })}
-          className="flex items-center justify-between gap-4 rounded-3xl border border-line bg-paper p-5 text-left active:scale-[0.99]"
-        >
-          <span>
-            <span className="block font-serif text-[30px] leading-none">
-              Sacar <span className="accent">turno</span>
-            </span>
-            <span className="mt-1.5 block text-[15px] text-muted">Elegí barbero, día y horario</span>
-          </span>
-          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-slate text-white">
-            <CalendarPlus className="size-5" />
-          </span>
-        </button>
-      </div>
+        </div>
+      </section>
 
       {next && (
-        <Section title="Tu próximo turno">
+        <Section
+          title={
+            <>
+              Tu próximo <span className="accent">turno</span>
+            </>
+          }
+          action={
+            more > 0 && (
+              <button type="button" onClick={() => tab({ id: "c-turnos" })} className="text-sm font-semibold underline underline-offset-4">
+                Ver {more === 1 ? "1 más" : `${more} más`}
+              </button>
+            )
+          }
+        >
           <Card onClick={() => tab({ id: "c-turnos" })} className="flex items-center gap-4 p-4">
             <div className="grid w-14 shrink-0 place-items-center rounded-xl bg-slate-soft py-2 text-slate">
               <span className="text-[11px] font-bold uppercase">{dayLabel(next.day).split(" ")[0]}</span>
@@ -99,9 +107,11 @@ export function ClientHome() {
           </button>
         }
       >
-        <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+        <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto overscroll-x-contain px-4 pb-2">
           {nearby.map((b) => (
-            <BarberTile key={b.id} b={b} />
+            <div key={b.id} className="snap-start">
+              <BarberTile b={b} />
+            </div>
           ))}
         </div>
       </Section>
@@ -212,8 +222,8 @@ export function ClientSearch() {
     [f],
   );
   return (
-    <main className="flex flex-col gap-4 pb-28">
-      <div className="px-4 pt-6">
+    <main className="flex flex-col gap-4 pb-12">
+      <div className="px-4 pt-2">
         <p className="eyebrow">Sacar turno</p>
         <h1 className="mt-1 text-[36px] leading-[1.05]">
           Barberos <span className="accent">cerca tuyo</span>
@@ -243,17 +253,64 @@ export function ClientSearch() {
 
 /* ───────── AHORA: búsqueda y lista ───────── */
 
+type AhoraFilters = {
+  radius: number;
+  modality: Modality | "all";
+  maxPrice: number | null;
+  minRating: number;
+  sort: "recomendados" | "cerca" | "rating" | "precio";
+};
+
+const DEFAULT_FILTERS: AhoraFilters = { radius: 3, modality: "all", maxPrice: null, minRating: 0, sort: "recomendados" };
+
+const SORT_LABEL: Record<AhoraFilters["sort"], string> = {
+  recomendados: "Recomendados",
+  cerca: "Más cerca",
+  rating: "Mejor calificados",
+  precio: "Más baratos",
+};
+
+const cutPrice = (b: Barber) => Math.min(...b.services.map((x) => x.price));
+
+function applyAhoraFilters(f: AhoraFilters): Barber[] {
+  const score = (b: Barber) => b.distanceKm * 0.6 - b.rating.avg * 0.4;
+  const order: Record<AhoraFilters["sort"], (a: Barber, b: Barber) => number> = {
+    recomendados: (a, b) => score(a) - score(b),
+    cerca: (a, b) => a.distanceKm - b.distanceKm,
+    rating: (a, b) => b.rating.avg - a.rating.avg,
+    precio: (a, b) => cutPrice(a) - cutPrice(b),
+  };
+  return BARBERS.filter(
+    (b) =>
+      b.availableNow &&
+      b.distanceKm <= f.radius &&
+      (f.modality === "all" || b.modality === f.modality) &&
+      (f.maxPrice === null || cutPrice(b) <= f.maxPrice) &&
+      b.rating.avg >= f.minRating,
+  ).sort(order[f.sort]);
+}
+
+/** Cuántos filtros difieren de los de fábrica (la distancia siempre se muestra aparte). */
+function activeFilterCount(f: AhoraFilters) {
+  return (
+    Number(f.modality !== DEFAULT_FILTERS.modality) +
+    Number(f.maxPrice !== DEFAULT_FILTERS.maxPrice) +
+    Number(f.minRating !== DEFAULT_FILTERS.minRating) +
+    Number(f.sort !== DEFAULT_FILTERS.sort)
+  );
+}
+
 export function AhoraScreen() {
   const { back, go } = useDemo();
   const [loading, setLoading] = useState(true);
-  const [radius, setRadius] = useState(3);
+  const [filters, setFilters] = useState<AhoraFilters>(DEFAULT_FILTERS);
+  const [sheetOpen, setSheetOpen] = useState(false);
   useEffect(() => {
     const id = setTimeout(() => setLoading(false), 2200);
     return () => clearTimeout(id);
   }, []);
-  const list = BARBERS.filter((b) => b.availableNow && b.distanceKm <= radius).sort(
-    (a, b) => a.distanceKm * 0.6 - b.rating.avg * 0.4 - (b.distanceKm * 0.6 - a.rating.avg * 0.4),
-  );
+  const list = applyAhoraFilters(filters);
+  const extra = activeFilterCount(filters);
 
   if (loading)
     return (
@@ -268,24 +325,43 @@ export function AhoraScreen() {
       </main>
     );
 
+  const summary = [
+    `Hasta ${filters.radius} km`,
+    filters.modality !== "all" && MODALITY_LABEL[filters.modality],
+    filters.maxPrice !== null && `Hasta ${formatArs(filters.maxPrice)}`,
+    filters.minRating > 0 && `${filters.minRating.toLocaleString("es-AR")}+ estrellas`,
+    filters.sort !== "recomendados" && SORT_LABEL[filters.sort],
+  ].filter(Boolean);
+
   return (
     <main className="flex flex-col gap-4 pb-10">
       <TopBar onBack={back} title="Libres ahora" />
       <div className="px-4">
         <h1 className="text-[34px] leading-[1.05]">
-          {list.length} barberos pueden <span className="accent">atenderte ya</span>
+          {list.length === 1 ? "1 barbero puede" : `${list.length} barberos pueden`} <span className="accent">atenderte ya</span>
         </h1>
       </div>
-      <div className="no-scrollbar flex gap-2 overflow-x-auto px-4">
-        {[3, 5, 10, 20].map((r) => (
-          <Chip key={r} active={radius === r} onClick={() => setRadius(r)}>
-            {r} km
-          </Chip>
-        ))}
-        <Chip>A domicilio</Chip>
-        <Chip>Hasta $10.000</Chip>
+      <div className="flex items-center gap-3 px-4">
+        <button
+          type="button"
+          onClick={() => setSheetOpen(true)}
+          className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border-[1.5px] border-pine bg-paper px-4 text-sm font-semibold text-pine active:bg-pine/5"
+        >
+          <SlidersHorizontal className="size-4" /> Filtros
+          {extra > 0 && <span className="grid min-w-5 place-items-center rounded-full bg-mode px-1.5 text-[11px] text-white">{extra}</span>}
+        </button>
+        <p className="min-w-0 truncate text-sm text-muted">{summary.join(" · ")}</p>
       </div>
       <div className="flex flex-col gap-3 px-4">
+        {list.length === 0 && (
+          <Card className="flex flex-col items-start gap-3 p-5">
+            <p className="font-semibold">Nadie libre con estos filtros.</p>
+            <p className="text-sm text-muted">Probá ampliar la distancia o avisale a los barberos de tu zona.</p>
+            <Btn variant="outline" size="sm" onClick={() => setFilters(DEFAULT_FILTERS)}>
+              Limpiar filtros
+            </Btn>
+          </Card>
+        )}
         {list.map((b) => (
           <BarberCard key={b.id} b={b} />
         ))}
@@ -300,111 +376,231 @@ export function AhoraScreen() {
           </Btn>
         </div>
       </div>
+      {sheetOpen && <AhoraFiltersSheet open value={filters} onClose={() => setSheetOpen(false)} onApply={setFilters} />}
     </main>
+  );
+}
+
+function FilterGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <fieldset className="flex flex-col gap-2.5">
+      <legend className="mb-2.5 text-sm font-semibold">{title}</legend>
+      <div className="flex flex-wrap gap-2">{children}</div>
+    </fieldset>
+  );
+}
+
+/** Hoja inferior con todos los filtros de "cortarme ahora". Se edita un borrador y se aplica al confirmar. */
+function AhoraFiltersSheet({
+  open,
+  value,
+  onClose,
+  onApply,
+}: {
+  open: boolean;
+  value: AhoraFilters;
+  onClose: () => void;
+  onApply: (f: AhoraFilters) => void;
+}) {
+  // Se monta solo al abrirse, así el borrador arranca con los filtros aplicados.
+  const [draft, setDraft] = useState(value);
+  const set = <K extends keyof AhoraFilters>(k: K, v: AhoraFilters[K]) => setDraft((d) => ({ ...d, [k]: v }));
+  const count = applyAhoraFilters(draft).length;
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Filtros">
+      <div className="flex flex-col gap-6 pb-2">
+        <FilterGroup title="Distancia">
+          {[1, 3, 5, 10].map((r) => (
+            <Chip key={r} active={draft.radius === r} onClick={() => set("radius", r)}>
+              Hasta {r} km
+            </Chip>
+          ))}
+        </FilterGroup>
+        <FilterGroup title="Dónde te atiende">
+          <Chip active={draft.modality === "all"} onClick={() => set("modality", "all")}>
+            Todos
+          </Chip>
+          {(Object.keys(MODALITY_LABEL) as Modality[]).map((m) => (
+            <Chip key={m} active={draft.modality === m} onClick={() => set("modality", m)}>
+              {MODALITY_LABEL[m]}
+            </Chip>
+          ))}
+        </FilterGroup>
+        <FilterGroup title="Precio del corte">
+          {[null, 8000, 10000, 12000].map((p) => (
+            <Chip key={p ?? "all"} active={draft.maxPrice === p} onClick={() => set("maxPrice", p)}>
+              {p === null ? "Cualquiera" : `Hasta ${formatArs(p)}`}
+            </Chip>
+          ))}
+        </FilterGroup>
+        <FilterGroup title="Calificación">
+          {[0, 4.5, 4.8].map((r) => (
+            <Chip key={r} active={draft.minRating === r} onClick={() => set("minRating", r)}>
+              {r === 0 ? "Cualquiera" : `${r.toLocaleString("es-AR")} o más`}
+            </Chip>
+          ))}
+        </FilterGroup>
+        <FilterGroup title="Ordenar por">
+          {(Object.keys(SORT_LABEL) as AhoraFilters["sort"][]).map((k) => (
+            <Chip key={k} active={draft.sort === k} onClick={() => set("sort", k)}>
+              {SORT_LABEL[k]}
+            </Chip>
+          ))}
+        </FilterGroup>
+        <div className="sticky bottom-0 -mx-5 flex items-center gap-3 border-t border-line bg-cream px-5 pt-3">
+          <Btn variant="ghost" onClick={() => setDraft(DEFAULT_FILTERS)}>
+            Limpiar
+          </Btn>
+          <Btn
+            variant="mode"
+            className="flex-1"
+            onClick={() => {
+              onApply(draft);
+              onClose();
+            }}
+          >
+            {count === 0 ? "Sin resultados" : count === 1 ? "Ver 1 barbero" : `Ver ${count} barberos`}
+          </Btn>
+        </div>
+      </div>
+    </Sheet>
   );
 }
 
 /* ───────── Alerta de zona (1.b) ───────── */
 
 export function AlertaScreen() {
-  const { s, dispatch, back, go, openWa } = useDemo();
+  const { s, dispatch, back } = useDemo();
   const [when, setWhen] = useState("Lo antes posible");
   const [service, setService] = useState("Corte");
 
-  useEffect(() => {
-    if (s.alert.status !== "sent") return;
-    const id = setTimeout(() => dispatch({ t: "alertAnswered" }), 4000);
-    return () => clearTimeout(id);
-  }, [s.alert.status, dispatch]);
-
-  if (s.alert.status === "none")
+  // Si ya hay un aviso en curso, se muestra su estado en lugar del formulario.
+  if (s.alert.status !== "none")
     return (
       <main className="flex min-h-dvh flex-col gap-6 pb-10">
-        <TopBar onBack={back} title="Avisar a mi zona" />
+        <TopBar onBack={back} title="Tu aviso" />
         <div className="px-4">
-          <h1 className="text-[34px] leading-[1.05]">
-            Busco corte <span className="accent">ahora</span> en {MY_ZONE}
-          </h1>
-          <p className="mt-2 text-muted">Le llega un aviso a los barberos a 3 km. Nadie ve tu teléfono hasta que elegís a quién responder.</p>
-        </div>
-        <Section title="¿Qué te hacés?">
-          <div className="flex flex-wrap gap-2">
-            {["Corte", "Barba", "Corte y barba"].map((x) => (
-              <Chip key={x} active={service === x} onClick={() => setService(x)}>
-                {x}
-              </Chip>
-            ))}
-          </div>
-        </Section>
-        <Section title="¿Cuándo?">
-          <div className="flex flex-wrap gap-2">
-            {["Lo antes posible", "En la próxima hora", "Esta tarde"].map((x) => (
-              <Chip key={x} active={when === x} onClick={() => setWhen(x)}>
-                {x}
-              </Chip>
-            ))}
-          </div>
-        </Section>
-        <div className="mt-auto px-4">
-          <Btn block size="lg" variant="terra" onClick={() => dispatch({ t: "sendAlert" })}>
-            <Bell className="size-5" /> Mandar aviso
-          </Btn>
+          <ZoneAlertCard />
         </div>
       </main>
     );
 
-  const k = BARBERS.find((b) => b.id === "kevin")!;
   return (
-    <main className="on-dark flex min-h-dvh flex-col gap-6 bg-pine px-6 pb-10 text-paper">
-      <TopBar dark onBack={back} />
-      {s.alert.status === "sent" ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-          <span className="pole-loader block h-28 w-11 rounded-full ring-[5px] ring-paper" aria-hidden />
-          <h1 className="text-[34px] leading-tight">
-            Avisamos a <span className="accent">12 barberos</span>
-          </h1>
-          <p className="text-paper/75">Te mandamos un aviso cuando alguno pueda atenderte. Podés cerrar la app.</p>
+    <main className="flex min-h-dvh flex-col gap-6 pb-10">
+      <TopBar onBack={back} title="Avisar a mi zona" />
+      <div className="px-4">
+        <h1 className="text-[34px] leading-[1.05]">
+          Busco corte <span className="accent">ahora</span> en {MY_ZONE}
+        </h1>
+        <p className="mt-2 text-muted">Le llega un aviso a los barberos a 3 km. Nadie ve tu teléfono hasta que elegís a quién responder.</p>
+      </div>
+      <Section title="¿Qué te hacés?">
+        <div className="flex flex-wrap gap-2">
+          {["Corte", "Barba", "Corte y barba"].map((x) => (
+            <Chip key={x} active={service === x} onClick={() => setService(x)}>
+              {x}
+            </Chip>
+          ))}
         </div>
-      ) : (
-        <div className="flex flex-1 flex-col justify-center gap-6">
-          <p className="eyebrow">Respondieron tu aviso</p>
-          <h1 className="text-[36px] leading-[1.05]">
-            {k.name.split(" ")[0]} puede atenderte <span className="accent">en 20 minutos</span>
-          </h1>
-          <div className="flex items-center gap-3 rounded-2xl bg-pine-2 p-4">
-            <Avatar name={k.name} tone={k.tone} size={52} />
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold">{k.name}</p>
-              <p className="text-sm text-paper/70">
-                {k.barrio} · {km(k.distanceKm)} · en su casa
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-3">
-            <Btn
-              variant="paper"
-              size="lg"
-              onClick={() => openWa(k.name, `Hola ${k.name.split(" ")[0]}, vi que respondiste mi aviso en Unbarber. ¡Voy para allá! Pasame la dirección.`)}
-            >
-              <WaIcon /> Escribirle por WhatsApp
-            </Btn>
-            <Btn variant="outline-light" onClick={() => go({ id: "barber", barberId: k.id })}>
-              Ver perfil
-            </Btn>
-            <Btn variant="ghost" className="text-paper" onClick={() => dispatch({ t: "resetAlert" })}>
-              Cerrar aviso
-            </Btn>
-          </div>
+      </Section>
+      <Section title="¿Cuándo?">
+        <div className="flex flex-wrap gap-2">
+          {["Lo antes posible", "En la próxima hora", "Esta tarde"].map((x) => (
+            <Chip key={x} active={when === x} onClick={() => setWhen(x)}>
+              {x}
+            </Chip>
+          ))}
         </div>
-      )}
+      </Section>
+      <div className="mt-auto px-4">
+        <Btn
+          block
+          size="lg"
+          variant="terra"
+          onClick={() => {
+            dispatch({ t: "sendAlert", service, when });
+            window.scrollTo({ top: 0 });
+          }}
+        >
+          <Bell className="size-5" /> Mandar aviso
+        </Btn>
+      </div>
     </main>
+  );
+}
+
+/** Estado del aviso de zona: esperando a un barbero, o un barbero lo aceptó y falta confirmar. */
+export function ZoneAlertCard() {
+  const { s, dispatch, barber, go, openWa } = useDemo();
+  const a = s.alert;
+  if (a.status === "none") return null;
+  const detail = [a.service, a.when?.toLowerCase()].filter(Boolean).join(" · ");
+
+  if (a.status === "sent")
+    return (
+      <div role="status" className="flex flex-col gap-4 rounded-3xl border border-terra/40 bg-terra-soft p-5">
+        <div className="flex items-start gap-4">
+          <span className="pole-loader mt-1 block h-14 w-6 shrink-0 rounded-full ring-[3px] ring-paper" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="eyebrow text-terra">Aviso enviado</p>
+            <p className="mt-1 font-serif text-[26px] leading-[1.05]">
+              Un barbero te va a contactar <span className="accent">pronto</span>
+            </p>
+            <p className="mt-1.5 text-sm text-muted">
+              Avisamos a 12 barberos de {MY_ZONE}
+              {detail && ` · ${detail}`}.
+            </p>
+          </div>
+        </div>
+        <Btn variant="ghost" className="self-start" onClick={() => dispatch({ t: "resetAlert" })}>
+          Cancelar aviso
+        </Btn>
+      </div>
+    );
+
+  const b = barber(a.barberId ?? "kevin");
+  const first = b.name.split(" ")[0];
+  return (
+    <div role="status" className="on-dark flex flex-col gap-4 rounded-3xl bg-terra p-5 text-white shadow-card">
+      <p className="flex items-center gap-2 text-sm font-semibold text-white/90">
+        <Check className="size-4" /> {first} aceptó tu pedido
+      </p>
+      <button type="button" onClick={() => go({ id: "barber", barberId: b.id })} className="flex items-center gap-3 rounded-2xl bg-white/12 p-3 text-left">
+        <Avatar name={b.name} tone={b.tone} size={52} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-serif text-xl leading-tight">{b.name}</span>
+          <span className="block truncate text-sm text-white/80">
+            {b.barrio} · {km(b.distanceKm)} · {MODALITY_LABEL[b.modality].toLowerCase()}
+          </span>
+        </span>
+        <ArrowRight className="size-4 shrink-0" />
+      </button>
+      <p className="flex items-center gap-2 font-serif text-[26px] leading-tight">
+        <Clock className="size-5 shrink-0" /> Te atiende en {a.eta ?? 20} minutos
+      </p>
+      <div className="grid grid-cols-2 gap-2.5">
+        <Btn
+          variant="outline-light"
+          onClick={() => openWa(b.name, `Hola ${first}, vi que aceptaste mi aviso en Unbarber. ¿Me pasás la dirección?`)}
+        >
+          <WaIcon className="size-4" /> Escribirle
+        </Btn>
+        <Btn variant="paper" onClick={() => dispatch({ t: "confirmAlert" })}>
+          <Check className="size-4" /> Confirmar
+        </Btn>
+      </div>
+      <Btn variant="ghost" className="self-center text-white" onClick={() => dispatch({ t: "resetAlert" })}>
+        No me sirve, cancelar
+      </Btn>
+    </div>
   );
 }
 
 /* ───────── Mis turnos ───────── */
 
 export function ClientTurnos() {
-  const { s, barber, dispatch, go, openWa } = useDemo();
+  const { s, barber, dispatch, go, tab, openWa } = useDemo();
   const [tabId, setTab] = useState<"next" | "past">("next");
   const mine = s.appointments.filter((a) => a.clientId === "me");
   const list = mine
@@ -412,18 +608,18 @@ export function ClientTurnos() {
     .sort((a, b) => (tabId === "next" ? a.day - b.day : b.day - a.day));
 
   return (
-    <main className="flex flex-col gap-4 pb-28">
-      <div className="px-4 pt-6">
+    <main className="flex flex-col gap-4 pb-12">
+      <div className="px-4 pt-2">
         <h1 className="text-[36px] leading-[1.05]">
           Mis <span className="accent">turnos</span>
         </h1>
       </div>
       {s.alert.status !== "none" && (
         <div className="px-4">
-          <Card onClick={() => go({ id: "alerta" })} className="flex items-center gap-3 border-terra/40 bg-terra-soft p-4">
+          <Card onClick={() => tab({ id: "c-home" })} className="flex items-center gap-3 border-terra/40 bg-terra-soft p-4">
             <Bell className="size-5 text-terra" />
             <span className="flex-1 text-sm font-semibold">
-              {s.alert.status === "sent" ? "Aviso de zona activo: esperando barberos" : "Un barbero respondió tu aviso"}
+              {s.alert.status === "sent" ? "Aviso de zona activo: esperando barberos" : "Un barbero aceptó tu aviso: confirmalo"}
             </span>
             <ArrowRight className="size-4" />
           </Card>
@@ -573,7 +769,7 @@ export function ProfileScreen() {
     { icon: Bell, label: "Avisos", value: "Activados" },
   ];
   return (
-    <main className="flex flex-col gap-6 pb-28">
+    <main className={`flex flex-col gap-6 ${barberMode ? "pb-28" : "pb-12"}`}>
       <div className="on-dark flex flex-col items-start gap-3 bg-pine px-5 pb-7 pt-8 text-paper">
         <span className="grid size-16 place-items-center rounded-full bg-slate font-serif text-2xl italic text-white">{s.account?.initials}</span>
         <h1 className="text-[34px] leading-none">{s.account?.name}</h1>

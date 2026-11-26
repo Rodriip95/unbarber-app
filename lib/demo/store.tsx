@@ -46,6 +46,21 @@ export type Screen =
 
 export type WaSheet = { to: string; text: string } | null;
 
+/** Aviso de zona "cortarme ahora": se manda, un barbero lo acepta y el cliente confirma. */
+export type ZoneAlert = {
+  status: "none" | "sent" | "answered";
+  service?: string;
+  when?: string;
+  barberId?: string;
+  /** Minutos que tarda el barbero en poder atenderlo */
+  eta?: number;
+};
+
+/** Cuánto tarda (simulado) un barbero en aceptar el aviso. */
+export const ALERT_ANSWER_MS = 6000;
+
+const ALERT_SERVICE_ID: Record<string, string> = { Corte: "corte", Barba: "barba", "Corte y barba": "combo" };
+
 type State = {
   account: { name: string; email: string; initials: string } | null;
   termsAccepted: boolean;
@@ -56,7 +71,7 @@ type State = {
   myBarbers: string[];
   availableNow: { on: boolean; until: string | null };
   membership: "trial" | "active";
-  alert: { status: "none" | "sent" | "answered"; barberId?: string };
+  alert: ZoneAlert;
   toast: string | null;
   wa: WaSheet;
   seq: number;
@@ -97,8 +112,9 @@ type Action =
   | { t: "toggleFav"; barberId: string }
   | { t: "available"; on: boolean; until: string | null }
   | { t: "activateMembership" }
-  | { t: "sendAlert" }
+  | { t: "sendAlert"; service: string; when: string }
   | { t: "alertAnswered" }
+  | { t: "confirmAlert"; now?: Date }
   | { t: "resetAlert" }
   | { t: "reset" }
   | { t: "hydrate"; state: State };
@@ -107,7 +123,7 @@ function homeFor(role: Role): Screen {
   return role === "barber" ? { id: "b-inbox" } : { id: "c-home" };
 }
 
-function reducer(s: State, a: Action): State {
+export function reducer(s: State, a: Action): State {
   switch (a.t) {
     case "login":
       return { ...s, account: a.account, stack: [s.termsAccepted ? (s.role ? homeFor(s.role) : { id: "role" }) : { id: "terms" }] };
@@ -163,9 +179,32 @@ function reducer(s: State, a: Action): State {
     case "activateMembership":
       return { ...s, membership: "active", toast: "Membresía activa" };
     case "sendAlert":
-      return { ...s, alert: { status: "sent" } };
+      return {
+        ...s,
+        alert: { status: "sent", service: a.service, when: a.when },
+        stack: [homeFor("client")],
+        toast: "Aviso enviado a los barberos de tu zona",
+      };
     case "alertAnswered":
-      return { ...s, alert: { status: "answered", barberId: "kevin" } };
+      return s.alert.status === "sent" ? { ...s, alert: { ...s.alert, status: "answered", barberId: "kevin", eta: 20 } } : s;
+    case "confirmAlert": {
+      if (s.alert.status !== "answered" || !s.alert.barberId) return s;
+      const b = BARBERS.find((x) => x.id === s.alert.barberId) ?? BARBERS[0];
+      const wanted = ALERT_SERVICE_ID[s.alert.service ?? "Corte"] ?? "corte";
+      const serviceId = b.services.some((x) => x.id === wanted) ? wanted : b.services[0].id;
+      const now = a.now ?? new Date();
+      // Hora de llegada redondeada a 5 minutos, sin pasar de las 23:55.
+      const at = Math.min(Math.ceil((now.getHours() * 60 + now.getMinutes() + (s.alert.eta ?? 20)) / 5) * 5, 23 * 60 + 55);
+      const time = `${String(Math.floor(at / 60)).padStart(2, "0")}:${String(at % 60).padStart(2, "0")}`;
+      const appt: Appointment = { id: `n${s.seq}`, barberId: b.id, clientId: "me", serviceId, day: 0, time, status: "confirmed", origin: "ahora" };
+      return {
+        ...s,
+        appointments: [...s.appointments, appt],
+        seq: s.seq + 1,
+        alert: { status: "none" },
+        toast: `Turno confirmado con ${b.name.split(" ")[0]} a las ${time}`,
+      };
+    }
     case "resetAlert":
       return { ...s, alert: { status: "none" } };
     case "reset":
@@ -220,6 +259,13 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(KEY, JSON.stringify({ ...s, toast: null, wa: null }));
     } catch {}
   }, [s]);
+
+  // Simula que un barbero de la zona acepta el aviso, esté el cliente en la pantalla que esté.
+  useEffect(() => {
+    if (s.alert.status !== "sent") return;
+    const id = setTimeout(() => dispatch({ t: "alertAnswered" }), ALERT_ANSWER_MS);
+    return () => clearTimeout(id);
+  }, [s.alert.status]);
 
   useEffect(() => {
     if (!s.toast) return;

@@ -6,10 +6,11 @@ import { AlertaScreen, AhoraScreen, ClientHome, ClientSearch, ClientTurnos, Prof
 import { BarberProfile, BookDone, BookScreen } from "./booking";
 import { BarberAgenda, BarberClient, BarberClients, BarberInbox, MembershipScreen, NewAppointment, RateClient } from "./barber";
 import { LoginScreen, RoleScreen, TermsScreen } from "./auth";
-import { BottomNav, WaSheet } from "./shared";
+import { BottomNav, ClientNav, WaSheet } from "./shared";
 import { Toast } from "./ui";
 
-const TABS = new Set(["c-home", "c-search", "c-turnos", "c-perfil", "b-inbox", "b-agenda", "b-clients", "b-perfil"]);
+const CLIENT_SECTIONS = new Set(["c-home", "c-search", "c-turnos", "c-perfil"]);
+const BARBER_TABS = new Set(["b-inbox", "b-agenda", "b-clients", "b-perfil"]);
 
 function render(screen: Screen) {
   switch (screen.id) {
@@ -92,13 +93,15 @@ function DesktopAside() {
 
 function Shell() {
   const { s, screen } = useDemo();
-  const showNav = TABS.has(screen.id);
+  const clientNav = s.role !== "barber" && CLIENT_SECTIONS.has(screen.id);
+  const barberNav = s.role === "barber" && BARBER_TABS.has(screen.id);
   return (
-    <div data-mode={s.role ?? "client"} className="flex min-h-dvh justify-center bg-sage-soft">
+    <div data-mode={s.role ?? "client"} className="flex min-h-dvh justify-center bg-cream md:bg-sage-soft">
       <DesktopAside />
-      <div className="relative min-h-dvh w-full max-w-[440px] bg-cream shadow-[0_0_0_1px_var(--line),0_30px_80px_-40px_rgb(24_45_38/0.5)]">
+      <div className="relative min-h-dvh w-full md:max-w-[440px] bg-cream md:shadow-[0_0_0_1px_var(--line),0_30px_80px_-40px_rgb(24_45_38/0.5)]">
+        {clientNav && <ClientNav />}
         {render(screen)}
-        {showNav && <BottomNav />}
+        {barberNav && <BottomNav />}
         <WaSheet />
         <Toast text={s.toast} />
       </div>

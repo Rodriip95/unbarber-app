@@ -1,6 +1,7 @@
 "use client";
 
-import { CalendarDays, House, Inbox, Search, User, Users } from "lucide-react";
+import { CalendarDays, House, Inbox, Menu, Search, User, Users, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { MODALITY_LABEL, type Appointment, type Barber } from "@/lib/demo/data";
 import { useDemo, type Screen } from "@/lib/demo/store";
@@ -22,17 +23,120 @@ const BARBER_TABS = [
   { id: "b-perfil", label: "Perfil", icon: User },
 ] as const;
 
+/** Navegación del cliente: barra superior con menú que abre un drawer lateral. */
+export function ClientNav() {
+  const { s, screen, tab } = useDemo();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const goTo = (id: (typeof CLIENT_TABS)[number]["id"]) => {
+    setOpen(false);
+    if (screen.id !== id) tab({ id } as Screen);
+  };
+
+  return (
+    <>
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 bg-cream/95 px-2 text-pine backdrop-blur">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menú"
+          aria-expanded={open}
+          aria-controls="client-drawer"
+          className="grid size-10 place-items-center rounded-full active:bg-black/5"
+        >
+          <Menu className="size-6" />
+        </button>
+        <button type="button" onClick={() => goTo("c-home")} aria-label="Ir al inicio">
+          <Logo className="h-7 w-auto text-pine" />
+        </button>
+        <button
+          type="button"
+          onClick={() => goTo("c-perfil")}
+          className="grid size-10 place-items-center rounded-full bg-slate text-sm font-semibold text-white"
+          aria-label="Tu perfil"
+        >
+          {s.account?.initials}
+        </button>
+      </header>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex justify-center" role="dialog" aria-modal aria-label="Menú">
+          <button type="button" aria-label="Cerrar menú" className="fade-in absolute inset-0 bg-pine/55" onClick={() => setOpen(false)} />
+          <div className="pointer-events-none relative h-dvh w-full md:max-w-[440px] overflow-hidden">
+            <nav
+              id="client-drawer"
+              aria-label="Secciones"
+              className="drawer-in pointer-events-auto absolute inset-y-0 left-0 flex w-[82%] max-w-[320px] flex-col bg-cream shadow-card"
+              style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom, 0px))" }}
+            >
+              <div className="on-dark flex flex-col items-start gap-3 bg-pine px-5 pb-6 pt-5 text-paper">
+                <div className="flex w-full items-start justify-between">
+                  <span className="grid size-14 place-items-center rounded-full bg-slate font-serif text-xl italic text-white">
+                    {s.account?.initials}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    aria-label="Cerrar menú"
+                    className="grid size-9 place-items-center rounded-full bg-paper/10"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-serif text-2xl leading-tight">{s.account?.name}</p>
+                  <p className="truncate text-sm text-paper/70">{s.account?.email}</p>
+                </div>
+              </div>
+              <ul className="flex flex-col gap-1 p-3">
+                {CLIENT_TABS.map(({ id, label, icon: Icon }) => {
+                  const active = screen.id === id;
+                  return (
+                    <li key={id}>
+                      <button
+                        type="button"
+                        onClick={() => goTo(id)}
+                        aria-current={active ? "page" : undefined}
+                        className={`flex w-full items-center gap-4 rounded-2xl px-4 py-3.5 text-left text-[15px] font-semibold ${
+                          active ? "bg-mode text-white" : "text-pine active:bg-black/5"
+                        }`}
+                      >
+                        <Icon className="size-[22px]" strokeWidth={active ? 2.4 : 1.8} />
+                        {label}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="mt-auto px-5">
+                <Logo className="h-6 w-auto text-pine/40" />
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Pestañas inferiores del modo barbero. */
 export function BottomNav() {
   const { s, screen, tab } = useDemo();
-  const tabs = s.role === "barber" ? BARBER_TABS : CLIENT_TABS;
   const pending = s.inbox.length;
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[440px] border-t border-line bg-paper/95 backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex md:max-w-[440px] border-t border-line bg-paper/95 backdrop-blur"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       aria-label="Secciones"
     >
-      {tabs.map(({ id, label, icon: Icon }) => {
+      {BARBER_TABS.map(({ id, label, icon: Icon }) => {
         const active = screen.id === id;
         return (
           <button

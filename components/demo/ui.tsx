@@ -213,7 +213,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal>
       <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-pine/55" onClick={onClose} />
       <div
-        className="sheet-in relative w-full max-w-[440px] rounded-t-3xl bg-cream px-5 pt-3 text-pine shadow-card"
+        className="sheet-in relative max-h-[90dvh] w-full overflow-y-auto overscroll-contain rounded-t-3xl bg-cream px-5 pt-3 text-pine shadow-card md:max-w-[440px]"
         style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 0px))" }}
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line" />
